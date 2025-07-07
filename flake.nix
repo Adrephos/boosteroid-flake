@@ -26,7 +26,7 @@
             src = pkgs.fetchurl {
               curlOpts = "--user-agent 'Mozilla/5.0'";
               url = "https://boosteroid.com/linux/installer/boosteroid-install-x64.deb";
-              hash = "sha256-tXQetaTFAfjZx9Hnjwa3GzzBD++pgNpKKPB1b2OsBjs=";
+              hash = "sha256-6Ttak+LqRJLMu0fUBim8wMJYIzvbKITiNpE6Hk70VDY=";
             };
 
             nativeBuildInputs = with pkgs; [
