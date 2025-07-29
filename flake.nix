@@ -21,7 +21,7 @@
         {
           boosteroid = pkgs.stdenv.mkDerivation {
             pname = "boosteroid";
-            version = "1.9.28-beta";
+            version = "1.9.31-beta";
 
             src = pkgs.fetchurl {
               curlOpts = "--user-agent 'Mozilla/5.0'";
