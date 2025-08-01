@@ -21,12 +21,12 @@
         {
           boosteroid = pkgs.stdenv.mkDerivation {
             pname = "boosteroid";
-            version = "1.9.31-beta";
+            version = "1.9.32-beta";
 
             src = pkgs.fetchurl {
               curlOpts = "--user-agent 'Mozilla/5.0'";
               url = "https://boosteroid.com/linux/installer/boosteroid-install-x64.deb";
-              hash = "sha256-HXHH5AcNz0jiy1zfOJO2iqf6Tj12dIO0NcDWs/yMMOo=";
+              hash = "sha256-zaSP1KeMqEQQ6V/Z2zjfe2X/XQ+XwrW8gE88ahvWrRo=";
             };
 
             nativeBuildInputs = with pkgs; [
