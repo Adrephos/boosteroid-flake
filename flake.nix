@@ -5,28 +5,32 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   };
 
-  outputs = { self, nixpkgs }:
+  outputs =
+    { self, nixpkgs }:
     let
       supportedSystems = [ "x86_64-linux" ];
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
     in
     {
-      packages = forAllSystems (system:
+      packages = forAllSystems (
+        system:
         let
           pkgs = import nixpkgs {
             system = system;
-            config = { allowUnfree = true; };
+            config = {
+              allowUnfree = true;
+            };
           };
         in
         {
           boosteroid = pkgs.stdenv.mkDerivation {
             pname = "boosteroid";
-            version = "1.10.4-beta";
+            version = "1.10.8-beta";
 
             src = pkgs.fetchurl {
               curlOpts = "--user-agent 'Mozilla/5.0'";
               url = "https://boosteroid.com/linux/installer/boosteroid-install-x64.deb";
-              hash = "sha256-kQry8FwSWmphsssIIrLgs1JIaX0onABB7T0J2D4P0Vw=";
+              hash = "sha256-wT769xaCEJ20YPMZhQy1VhPkwIAW4luPx5VXiIH+flE=";
             };
 
             nativeBuildInputs = with pkgs; [
@@ -101,13 +105,13 @@
             };
           };
           default = self.packages.${system}.boosteroid;
-        });
+        }
+      );
 
       apps = forAllSystems (system: {
         boosteroid = {
           type = "app";
-          program =
-            "${self.packages.${system}.boosteroid}/bin/Boosteroid";
+          program = "${self.packages.${system}.boosteroid}/bin/Boosteroid";
         };
         default = self.apps.${system}.boosteroid;
       });
