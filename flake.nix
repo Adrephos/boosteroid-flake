@@ -40,20 +40,20 @@
             ];
 
             buildInputs = with pkgs; [
-              xorg.xcbutil
-              xorg.libxcb
+              xcbutil
+              libxcb
               numactl
               libva
               libvdpau
-              xorg.libXfixes
-              xorg.libXi
+              libXfixes
+              libXi
               systemd
               alsa-lib
-              xorg.libX11
-              xorg.xcbutilwm
-              xorg.xcbutilimage
-              xorg.xcbutilkeysyms
-              xorg.xcbutilrenderutil
+              libX11
+              xcbutilwm
+              xcbutilimage
+              xcbutilkeysyms
+              xcbutilrenderutil
               libxkbcommon
               freetype
               fontconfig
@@ -64,12 +64,12 @@
               libGL
               xz
               libinput
-              xorg.libXcursor
-              xorg.libXrandr
-              xorg.libXinerama
-              xorg.libXrender
-              xorg.libXtst
-              xorg.libxkbfile
+              libXcursor
+              libXrandr
+              libXinerama
+              libXrender
+              libXtst
+              libxkbfile
             ];
 
             sourceRoot = ".";
