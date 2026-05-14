@@ -24,8 +24,8 @@
         in
         {
           boosteroid = pkgs.stdenv.mkDerivation {
-            pname = "Boosteroid";
-            version = "1.10.12-beta";
+            pname = "boosteroid";
+            version = "1.10.12";
 
             # The upstream URL is always-latest; the version above must be kept
             # in sync manually or via `nix-update boosteroid`.
@@ -39,7 +39,6 @@
               autoPatchelfHook
               dpkg
               makeWrapper
-              nix-update
             ];
 
             buildInputs = with pkgs; [
@@ -60,7 +59,6 @@
               libxkbcommon
               freetype
               fontconfig
-              wayland-scanner
               wayland
               qt5.qtwayland # Wayland QPA plugin; Boosteroid may ship its own Qt — remove if conflicts arise
               pcre2
@@ -96,7 +94,7 @@
               wrapProgram "$out/bin/Boosteroid" \
                 --set-default QT_QPA_PLATFORM "xcb" \
                 --prefix XCURSOR_PATH : "$out/share/icons" \
-                --set XDG_DATA_DIRS "$out/share:$XDG_DATA_DIRS" \
+                --prefix XDG_DATA_DIRS : "$out/share" \
                 --set-default QT_XCB_GL_INTEGRATION "xcb_egl" \
                 --set-default QT_QPA_PLATFORMTHEME "qt5ct"
               runHook postInstall
@@ -109,6 +107,7 @@
               homepage = "https://boosteroid.com/";
               license = licenses.unfree;
               platforms = platforms.linux;
+              mainProgram = "Boosteroid";
             };
           };
           default = self.packages.${system}.boosteroid;
@@ -125,11 +124,46 @@
 
       nixosModules.default =
         { config, pkgs, lib, ... }:
+        let
+          cfg = config.programs.boosteroid;
+          decoderFlag = {
+            vdpau    = "-vdpau";
+            vaapi    = "-vaapi";
+            cuda     = "-cuda";
+            software = "-s";
+            default  = null;
+          }.${cfg.videoDecoder};
+        in
         {
-          options.programs.boosteroid.enable = lib.mkEnableOption "Boosteroid cloud gaming client";
+          options.programs.boosteroid = {
+            enable = lib.mkEnableOption "Boosteroid cloud gaming client";
+            package = lib.mkOption {
+              type = lib.types.package;
+              default = self.packages.${pkgs.system}.boosteroid;
+              defaultText = lib.literalExpression "boosteroid";
+              description = "The Boosteroid package to use.";
+            };
+            videoDecoder = lib.mkOption {
+              type = lib.types.enum [ "default" "vdpau" "vaapi" "cuda" "software" ];
+              default = "default";
+              description = ''
+                Video decoder for stream playback.
+                "vdpau" and "vaapi" use hardware acceleration; "cuda" requires NVIDIA;
+                "software" disables hardware decoding; "default" lets Boosteroid choose.
+              '';
+            };
+          };
 
-          config = lib.mkIf config.programs.boosteroid.enable {
-            environment.systemPackages = [ self.packages.${pkgs.system}.boosteroid ];
+          config = lib.mkIf cfg.enable {
+            environment.systemPackages = [
+              (if decoderFlag == null
+               then cfg.package
+               else pkgs.runCommand "boosteroid-wrapped" { nativeBuildInputs = [ pkgs.makeWrapper ]; } ''
+                 makeWrapper ${cfg.package}/bin/Boosteroid $out/bin/Boosteroid \
+                   --add-flags "${decoderFlag}"
+                 ln -s ${cfg.package}/share $out/share
+               '')
+            ];
           };
         };
     };
