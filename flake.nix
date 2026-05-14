@@ -16,7 +16,7 @@
         system:
         let
           pkgs = import nixpkgs {
-            system = system;
+            inherit system;
             config = {
               allowUnfree = true;
             };
@@ -27,6 +27,8 @@
             pname = "Boosteroid";
             version = "1.10.12-beta";
 
+            # The upstream URL is always-latest; the version above must be kept
+            # in sync manually or via `nix-update boosteroid`.
             src = pkgs.fetchurl {
               curlOpts = "--user-agent 'Mozilla/5.0'";
               url = "https://boosteroid.com/linux/installer/boosteroid-install-x64.deb";
@@ -37,6 +39,7 @@
               autoPatchelfHook
               dpkg
               makeWrapper
+              nix-update
             ];
 
             buildInputs = with pkgs; [
@@ -58,6 +61,8 @@
               freetype
               fontconfig
               wayland-scanner
+              wayland
+              qt5.qtwayland # Wayland QPA plugin; Boosteroid may ship its own Qt — remove if conflicts arise
               pcre2
               dbus
               libpulseaudio
@@ -77,6 +82,7 @@
 
             dontConfigure = true;
             dontBuild = true;
+            dontWrapQtApps = true;
 
             installPhase = ''
               runHook preInstall
@@ -88,14 +94,15 @@
                 --replace-warn /opt/BoosteroidGamesS.R.L./bin $out/bin \
                 --replace-warn Icon=/usr/share/icons/Boosteroid/icon.svg Icon=$out/share/icons/Boosteroid/icon.svg
               wrapProgram "$out/bin/Boosteroid" \
-                --set QT_QPA_PLATFORM "xcb" \
-                --set XCURSOR_PATH "$out/share/icons:$XCURSOR_PATH" \
-                --set XCURSOR_THEME "YourCursorTheme" \
+                --set-default QT_QPA_PLATFORM "xcb" \
+                --prefix XCURSOR_PATH : "$out/share/icons" \
                 --set XDG_DATA_DIRS "$out/share:$XDG_DATA_DIRS" \
-                --set QT_XCB_GL_INTEGRATION "xcb_egl" \
-                --set QT_QPA_PLATFORMTHEME "qt5ct"
+                --set-default QT_XCB_GL_INTEGRATION "xcb_egl" \
+                --set-default QT_QPA_PLATFORMTHEME "qt5ct"
               runHook postInstall
             '';
+
+            passthru.updateScript = pkgs.nix-update-script { };
 
             meta = with pkgs.lib; {
               description = "Boosteroid cloud gaming client";
@@ -115,5 +122,15 @@
         };
         default = self.apps.${system}.boosteroid;
       });
+
+      nixosModules.default =
+        { config, pkgs, lib, ... }:
+        {
+          options.programs.boosteroid.enable = lib.mkEnableOption "Boosteroid cloud gaming client";
+
+          config = lib.mkIf config.programs.boosteroid.enable {
+            environment.systemPackages = [ self.packages.${pkgs.system}.boosteroid ];
+          };
+        };
     };
 }
