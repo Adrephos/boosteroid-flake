@@ -133,6 +133,24 @@
             software = "-s";
             default  = null;
           }.${cfg.videoDecoder};
+
+          needsWrapper = decoderFlag != null || cfg.extraEnv != { };
+
+          wrapperArgs = lib.concatStringsSep " " (
+            lib.optional (decoderFlag != null) "--add-flags ${lib.escapeShellArg decoderFlag}"
+            ++ lib.mapAttrsToList
+              (k: v: "--set-default ${k} ${lib.escapeShellArg v}")
+              cfg.extraEnv
+          );
+
+          finalPackage =
+            if !needsWrapper then cfg.package
+            else pkgs.symlinkJoin {
+              name = "boosteroid-wrapped";
+              paths = [ cfg.package ];
+              buildInputs = [ pkgs.makeWrapper ];
+              postBuild = "wrapProgram $out/bin/Boosteroid ${wrapperArgs}";
+            };
         in
         {
           options.programs.boosteroid = {
@@ -152,18 +170,25 @@
                 "software" disables hardware decoding; "default" lets Boosteroid choose.
               '';
             };
+            extraEnv = lib.mkOption {
+              type = lib.types.attrsOf lib.types.str;
+              default = { };
+              example = {
+                LIBVA_DRIVER_NAME = "radeonsi";
+                LIBVA_DRIVERS_PATH = "/run/opengl-driver/lib/dri";
+                LD_LIBRARY_PATH = "/run/opengl-driver/lib";
+              };
+              description = ''
+                Extra environment variables passed to Boosteroid at launch via
+                --set-default, so they can still be overridden from the shell.
+                Useful for VAAPI tuning: set LIBVA_DRIVER_NAME (e.g. "radeonsi",
+                "nvidia", "iHD"), LIBVA_DRIVERS_PATH, and LD_LIBRARY_PATH.
+              '';
+            };
           };
 
           config = lib.mkIf cfg.enable {
-            environment.systemPackages = [
-              (if decoderFlag == null
-               then cfg.package
-               else pkgs.runCommand "boosteroid-wrapped" { nativeBuildInputs = [ pkgs.makeWrapper ]; } ''
-                 makeWrapper ${cfg.package}/bin/Boosteroid $out/bin/Boosteroid \
-                   --add-flags "${decoderFlag}"
-                 ln -s ${cfg.package}/share $out/share
-               '')
-            ];
+            environment.systemPackages = [ finalPackage ];
           };
         };
     };
