@@ -157,7 +157,7 @@
             enable = lib.mkEnableOption "Boosteroid cloud gaming client";
             package = lib.mkOption {
               type = lib.types.package;
-              default = self.packages.${pkgs.system}.boosteroid;
+              default = self.packages.${pkgs.stdenv.hostPlatform.system}.boosteroid;
               defaultText = lib.literalExpression "boosteroid";
               description = "The Boosteroid package to use.";
             };
