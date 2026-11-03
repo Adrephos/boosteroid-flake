@@ -25,14 +25,14 @@
         {
           boosteroid = pkgs.stdenv.mkDerivation {
             pname = "boosteroid";
-            version = "1.10.23";
+            version = "1.10.24";
 
             # The upstream URL is always-latest; the version above must be kept
             # in sync manually or via `nix-update boosteroid`.
             src = pkgs.fetchurl {
               curlOpts = "--user-agent 'Mozilla/5.0'";
               url = "https://boosteroid.com/linux/installer/boosteroid-install-x64.deb";
-              hash = "sha256-wD3PVaT4/VO+nhz3hRMwkeTQalNxtWTczIRL8fL0hMc=";
+              hash = "sha256-vhAIaG14o8D/26D2zd0V7b4tIAAbWZ7MtbVH7mMy/lE=";
             };
 
             nativeBuildInputs = with pkgs; [
